@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title></title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.12.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.12.0/mapbox-gl.css' rel='stylesheet' />
+    <script src='landslides.js'></script>
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+        p{
+            color: #808080;
+        }
+    </style>
+</head>
+<body>
+
+<div id='map'></div>
+<script>
+mapboxgl.accessToken = 'pk.eyJ1Ijoic3RhcmF0bnl0ZSIsImEiOiJja3RmcjMyOHMwMDh3MndvNjk0Y2xjcHI2In0.LDWBstANMgKED1hzdmM_yQ';
+
+var map = new mapboxgl.Map({
+
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v8',
+    center: [85.300140,27.700769],
+    zoom: 11
+});
+
+map.on('style.load', function () {
+    map.addSource("markers", {
+        "type": "geojson",
+        "data": landslides
+    });
+
+    map.addLayer({
+        "id": "markers",
+        "interactive": true,
+        "type": "symbol",
+        "source": "markers",
+        "layout": {
+            "icon-image": "information-11",
+            "icon-size": 1.25
+        },
+        "paint": {
+            /*"text-size": 10,*/
+        }
+    });
+});
+
+map.on('click', function (e) {
+    // Use featuresAt to get features within a given radius of the click event
+    // Use layer option to avoid getting results from other layers
+    map.featuresAt(e.point, {layer: 'markers', radius: 5, includeGeometry: true}, function (err, features) {
+        if (err) throw err;
+        // if there are features within the given radius of the click event,
+        // fly to the location of the click event
+        if (features.length) {
+            // Get coordinates from the symbol and center the map on those coordinates
+            map.flyTo({center: features[0].geometry.coordinates});
+            var featureName = features[0].properties.source_name;
+            var sourcelink = features[0].properties.source_link;
+            var eventDate = features[0].properties.event_date;
+            var eventPlace = features[0].properties.event_title;
+            var eventDescription = features[0].properties.event_description;
+            var category = features[0].properties.landslide_category;
+            var trigger = features[0].properties.landslide_trigger;
+            var size = features[0].properties.landslide_size;
+            var fatality = features[0].properties.fatality_count;           
+            var injury = features[0].properties.injury_count;
+            var latitude = features[0].properties.latitude;
+            var longitude = features[0].properties.longitude;
+
+            var tooltip = new mapboxgl.Popup()
+                .setLngLat(e.lngLat)
+                .setHTML(`<p>Latitude: ${latitude}   Longitude:  ${longitude}</p><p>Event Place: ${eventPlace}</p><p>Source: ${featureName}</p><p>Link: <a href="${sourcelink}"> ${sourcelink}</a> </p><p>Landslide Date : ${eventDate}</p></p><p>Landslide Date : ${eventDescription}</p><p>Landslide Category: ${category}</p><p>Landslide Trigger: ${trigger}</p><p>Landslide Size: ${size}</p><p>Fatality Count: ${fatality}</p><p>Injury Count: ${injury}</p>`)
+                .addTo(map);
+
+        }
+    });
+});
+
+
+// Use the same approach as above to indicate that the symbols are clickable
+// by changing the cursor style to 'pointer'.
+map.on('mousemove', function (e) {
+    map.featuresAt(e.point, {layer: 'markers', radius: 5}, function (err, features) {
+        if (err) throw err;
+        map.getCanvas().style.cursor = features.length ? 'pointer' : '';
+    });
+});
+</script>
+
+</body>
+</html>

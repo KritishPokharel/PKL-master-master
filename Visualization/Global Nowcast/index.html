@@ -1,0 +1,57 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.css' rel='stylesheet' />
+  </head>
+  <body>
+    <div id='map' style='width: 400px; height: 800px;'></div>
+    <script>
+
+    mapboxgl.accessToken = 'pk.eyJ1IjoicHJhdGlrLXNocmVzdGhhIiwiYSI6ImNrdGZyMWV0bjBhd20ybm11MHZzMWJ6bnAifQ.DLFBT4UI1XgWP7huQq11Rg';
+    const map = new mapboxgl.Map({
+    container: 'map', // container ID
+    style: 'mapbox://styles/mapbox/satellite-streets-v11', // style URL
+    center: [85.300140, 27.700769], // starting position [lng, lat]
+    zoom: 5 // starting zoom
+    });
+    
+    map.on('load', () => {
+// Add source for country polygons using the Mapbox Countries tileset
+// The polygons contain an ISO 3166 alpha-3 code which can be used to for joining the data
+// https://docs.mapbox.com/vector-tiles/reference/mapbox-countries-v1
+    map.addSource('predict', {
+        type: 'geojson',
+        data: '/global_landslide_nowcast_3hr.20211002.083000.geojson'
+    });
+    map.addLayer({
+        "id": "predict",
+        "type": "fill",
+        "source": "predict",
+        //"source-layer": "predict",
+        "paint": {
+            'fill-opacity': 0.5,
+            'fill-color': {
+                property: 'nowcast',
+                type: 'categorical',
+                stops: [
+                    [1, '#fbb03b'],
+                    [2, '#b72517']]
+            }
+        }
+      });
+
+      const nav = new mapboxgl.NavigationControl({
+        visualizePitch: true,
+        showZoom: true,
+        showCompass:true
+      });
+      map.addControl(nav, 'bottom-right');
+    });
+    </script>
+  </body>
+</html>
